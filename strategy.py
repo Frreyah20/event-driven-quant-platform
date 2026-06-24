@@ -118,7 +118,7 @@ class Strategy(BaseStrategy):
                     return signal
                 
                 #SELL SIGNAL
-                elif ((short_ma<long_ma or rsi > 30) and self.in_market[symbol]): #“Trend is bearish, or overbought, exit the position”
+                elif ((short_ma<long_ma or rsi > 70) and self.in_market[symbol]): #“Trend is bearish, or overbought, exit the position”
                     print(f"SELL SIGNAL for {symbol}")
                     self.in_market[symbol] = False
                     self.sell_signals[symbol].append(close_price)
