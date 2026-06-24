@@ -35,6 +35,10 @@ for strategy_name in strategy_names:
             strategy_name,
         "sharpe":
             results["sharpe"],
+        "gross_sharpe":
+            results.get("gross_sharpe", 0),
+        "total_transaction_costs":
+            results.get("total_transaction_costs", 0),
         "max_drawdown":
             results["max_drawdown"],
         "equity_curve":
@@ -52,8 +56,16 @@ for result in all_results:
         f"{result['strategy']}"
     )
     print(
-        f"Sharpe Ratio: "
+        f"Sharpe Ratio (Net): "
         f"{result['sharpe']:.4f}"
+    )
+    print(
+        f"Sharpe Ratio (Gross): "
+        f"{result['gross_sharpe']:.4f}"
+    )
+    print(
+        f"Total Transaction Costs: "
+        f"${result['total_transaction_costs']:.2f}"
     )
     print(
         f"Max Drawdown: "

@@ -5,16 +5,20 @@ class Portfolio:
     def __init__(self, initial_capital: float = 100_000, 
                  commission: float = 5, #every trade costs 5 rupees or dollars
                  slippage_percent: float = 0.001, #slippage = 0.1%
-                 position_size_percent: float = 0.10): #10% portfolio allocation per trade
+                 position_size_percent: float = 0.10,
+                 commission_type: str = "fixed"): #10% portfolio allocation per trade
         self.initial_capital = initial_capital
         self.cash = initial_capital
         self.total_portfolio_value = initial_capital
         self.commission = commission
+        self.commission_type = commission_type
         self.slippage_percent = slippage_percent
         self.position_size_percent = position_size_percent
         self.current_prices: dict[str, float] = {}
         self.positions: dict[str, int] = {}
         self.all_portfolio_values: list[float] = []
+        self.all_gross_portfolio_values: list[float] = []
+        self.total_transaction_costs = 0.0
         self.completed_trades = []
         self.entry_prices = {}
         self.asset_volatility = {}
@@ -29,6 +33,7 @@ class Portfolio:
         total = self.cash + holding_value
         self.total_portfolio_value = total
         self.all_portfolio_values.append(total)
+        self.all_gross_portfolio_values.append(total + self.total_transaction_costs)
         print(f"  [Portfolio] value={total:.2f}  cash={self.cash:.2f}  "
               f"positions={self.positions}")
         return total
@@ -62,11 +67,19 @@ class Portfolio:
         )
         return order
     
+    def _calculate_commission(self, trade_value):
+        if self.commission_type == "percentage":
+            return trade_value * self.commission
+        return self.commission
+
     def update_fill(self, fill) -> None:
         if fill.direction == "BUY":
-            slippage_cost = (fill.price * self.slippage_percent)
-            execution_price = (fill.price + slippage_cost)
-            cost = (execution_price * fill.quantity) + self.commission
+            slippage_cost_per_share = (fill.price * self.slippage_percent)
+            execution_price = (fill.price + slippage_cost_per_share)
+            trade_value = execution_price * fill.quantity
+            commission_cost = self._calculate_commission(trade_value)
+            cost = trade_value + commission_cost
+            self.total_transaction_costs += (slippage_cost_per_share * fill.quantity) + commission_cost
             self.cash -= cost
             self.positions[fill.symbol] = self.positions.get(fill.symbol, 0) + fill.quantity
             self.entry_prices[fill.symbol] = execution_price
@@ -79,9 +92,12 @@ class Portfolio:
             held = self.positions.get(fill.symbol, 0)
             if held <= 0:
                 print(f"  [Portfolio] WARN: SELL received for {fill.symbol} with no position")
-            slippage_cost = (fill.price * self.slippage_percent)
-            execution_price = (fill.price - slippage_cost)
-            revenue = (execution_price * fill.quantity) - self.commission
+            slippage_cost_per_share = (fill.price * self.slippage_percent)
+            execution_price = (fill.price - slippage_cost_per_share)
+            trade_value = execution_price * fill.quantity
+            commission_cost = self._calculate_commission(trade_value)
+            revenue = trade_value - commission_cost
+            self.total_transaction_costs += (slippage_cost_per_share * fill.quantity) + commission_cost
             entry_price = self.entry_prices[fill.symbol]
             pnl = (execution_price - entry_price) *fill.quantity
             self.cash += revenue
@@ -108,21 +124,22 @@ class Portfolio:
 
         self.current_prices[symbol] = current_price
 
-    def calculate_returns(self):
+    def calculate_returns(self, gross=False):
         returns = []
-        for i in range(1, len(self.all_portfolio_values)):
-            previous = self.all_portfolio_values[i-1]
-            current = self.all_portfolio_values[i]
+        values = self.all_gross_portfolio_values if gross else self.all_portfolio_values
+        for i in range(1, len(values)):
+            previous = values[i-1]
+            current = values[i]
             daily_returns = (current - previous)/previous
             returns.append(daily_returns)
         return returns
 
-    def calculate_sharpe_ratio(self):
+    def calculate_sharpe_ratio(self, gross=False):
         """
         Calculates the annualized Sharpe ratio.
         Assumes a risk-free rate of 0% and 252 trading days per year.
         """
-        returns = self.calculate_returns()
+        returns = self.calculate_returns(gross=gross)
         if len(returns) == 0:
             return 0
         average_returns = np.mean(returns)

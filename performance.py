@@ -76,7 +76,7 @@ class Performance:
 
     def plot_multiple_equity_curves(self, all_results):
         plt.figure(figsize=(12, 6))
-        for results in all_results:
+        for result in all_results:
             plt.plot(result["equity_curve"], label = result["strategy"])
         plt.title("Multi-Strategy Comparison")
         plt.xlabel("Time")

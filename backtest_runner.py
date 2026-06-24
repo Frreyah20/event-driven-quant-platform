@@ -12,7 +12,10 @@ def run_backtest(strategy, csv_files, split = "train"):
 
     # core engine components
     portfolio = Portfolio(
-        initial_capital=100000
+        initial_capital=100000,
+        commission=0.001,
+        slippage_percent=0.0005,
+        commission_type="percentage"
     )
 
     execution = ExecutionHandler()
@@ -101,7 +104,12 @@ def run_backtest(strategy, csv_files, split = "train"):
             portfolio.calculate_calmar_ratio(),
         "trade_statistics": trade_statistics,
         "returns":
-            portfolio.calculate_returns()
+            portfolio.calculate_returns(),
+        "gross_returns": portfolio.calculate_returns(gross=True),
+        "net_returns": portfolio.calculate_returns(gross=False),
+        "gross_sharpe": portfolio.calculate_sharpe_ratio(gross=True),
+        "net_sharpe": portfolio.calculate_sharpe_ratio(gross=False),
+        "total_transaction_costs": portfolio.total_transaction_costs
     }
 
     return results
