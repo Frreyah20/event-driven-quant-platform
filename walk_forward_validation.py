@@ -25,11 +25,11 @@ def run_walk_forward_validation(data):
         prediction = model.predict(x_test)
         accuracy = accuracy_score(y_test, prediction)
         accuracies.append(accuracy)
-        print(f"\nWondow Accuracy: "
-              f"{accuracy:.4f}"
+    print(f"\nWondow Accuracy: "
+            f"{accuracy:.4f}"
         )
-        average_accuracy = np.mean(accuracies)
-        print(f"\nAverage Walk Forward Accuracy: "
-              f"{average_accuracy:.4f}"
+    average_accuracy = np.mean(accuracies)
+    print(f"\nAverage Walk Forward Accuracy: "
+            f"{average_accuracy:.4f}"
         )
 
