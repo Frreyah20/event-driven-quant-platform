@@ -137,9 +137,11 @@ if run_button:
 
     for key, value in trade_stats.items():
 
-        st.write(
-            f"{key}: {value}"
-        )
+        if isinstance(value, float):
+            st.write(f"{key}: {value:.2f}")
+
+        else:
+            st.write(f"{key}: {value}")
 
 
     # -----------------------------------------------

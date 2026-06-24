@@ -118,14 +118,18 @@ class Portfolio:
         return returns
 
     def calculate_sharpe_ratio(self):
+        """
+        Calculates the annualized Sharpe ratio.
+        Assumes a risk-free rate of 0% and 252 trading days per year.
+        """
         returns = self.calculate_returns()
         if len(returns) == 0:
             return 0
         average_returns = np.mean(returns)
         volatility = np.std(returns)
-        if volatility == 0:
+        if np.isclose(volatility, 0):
             return 0
-        sharpe_ratio = average_returns/volatility
+        sharpe_ratio = (average_returns / volatility) * np.sqrt(252)
         return sharpe_ratio
 
     def calculate_maximum_drawdown(self):
